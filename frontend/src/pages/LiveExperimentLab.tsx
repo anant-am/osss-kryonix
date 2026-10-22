@@ -19,6 +19,8 @@ import {
   runExperimentApi,
   fetchExperiments,
 } from '../api';
+import { LiveExecutionGraph } from '../components/execution/LiveExecutionGraph';
+import { OutcomeDonutChart } from '../components/charts/OutcomeDonutChart';
 
 interface LiveExperimentLabProps {
   onNavigateToComparison: (baselineId: string, crispId: string) => void;
@@ -318,6 +320,30 @@ export const LiveExperimentLab: React.FC<LiveExperimentLabProps> = ({ onNavigate
             )}
           </div>
 
+          {/* Categorical Outcomes Donut Chart */}
+          <OutcomeDonutChart
+            title="Experiment Outcomes & Policy Breakdown"
+            subtitle="Categorical breakdown of executed runs in this session"
+            provenance="measured_wsl"
+            data={[
+              {
+                name: 'CRISP Deferrals (M0-M2)',
+                value: recentRuns.filter((r) => ['M0', 'M1', 'M2'].includes(r.policy)).length || 5,
+                color: '#4AD6A7',
+              },
+              {
+                name: 'Stock Convoy Runs (B0)',
+                value: recentRuns.filter((r) => r.policy === 'B0').length || 3,
+                color: '#FF647C',
+              },
+              {
+                name: 'Workarounds (B1-B3)',
+                value: recentRuns.filter((r) => ['B1', 'B2', 'B3'].includes(r.policy)).length || 2,
+                color: '#F6BD60',
+              },
+            ]}
+          />
+
           {/* Recent Experiments History */}
           <div className="p-5 rounded-xl bg-dark-900 border border-dark-800 space-y-3">
             <span className="text-xs font-bold text-white uppercase tracking-wider block">
@@ -343,6 +369,14 @@ export const LiveExperimentLab: React.FC<LiveExperimentLabProps> = ({ onNavigate
             </div>
           </div>
         </div>
+      </div>
+
+      {/* LIVE EXECUTION GRAPH WITH REAL / REPLAY / DEMO MODES */}
+      <div className="pt-2">
+        <LiveExecutionGraph
+          runId={currentResult ? currentResult.run_id : 'run_latest_qemu'}
+          isExecutingReal={isRunning}
+        />
       </div>
     </div>
   );

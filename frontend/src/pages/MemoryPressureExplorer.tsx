@@ -10,6 +10,8 @@ import {
   Layers,
 } from 'lucide-react';
 import { fetchPenaltyTable } from '../api';
+import { MemoryUsageChart, MemoryDataPoint } from '../components/charts/MemoryUsageChart';
+import { DebtAccountingChart, DebtStepDataPoint } from '../components/charts/DebtAccountingChart';
 
 export const MemoryPressureExplorer: React.FC = () => {
   const [overagePct, setOveragePct] = useState<number>(5.0);
@@ -220,6 +222,40 @@ export const MemoryPressureExplorer: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Dynamic Real-Time Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Real-Time Memory Boundary Time-Series */}
+        <MemoryUsageChart
+          title="Simulated Container Memory Overage vs memory.high Boundary"
+          subtitle={`Physical cgroup usage reaching ${100 + Number(overagePct.toFixed(1))} MB against 100 MB soft limit`}
+          provenance="analytical"
+          data={[
+            { timeSec: 0, memoryUsageMb: 85, memoryHighLimitMb: 100, deferredDebtPages: 0 },
+            { timeSec: 1, memoryUsageMb: 94, memoryHighLimitMb: 100, deferredDebtPages: 0 },
+            { timeSec: 2, memoryUsageMb: 99, memoryHighLimitMb: 100, deferredDebtPages: 0 },
+            { timeSec: 3, memoryUsageMb: 100 + overagePct * 0.7, memoryHighLimitMb: 100, deferredDebtPages: Math.round(debtPages * 0.5) },
+            { timeSec: 4, memoryUsageMb: 100 + overagePct, memoryHighLimitMb: 100, deferredDebtPages: debtPages },
+            { timeSec: 5, memoryUsageMb: 100 + overagePct * 0.8, memoryHighLimitMb: 100, deferredDebtPages: Math.round(debtPages * 0.6) },
+            { timeSec: 6, memoryUsageMb: 98, memoryHighLimitMb: 100, deferredDebtPages: 0 },
+          ]}
+        />
+
+        {/* 4-State Credit Ledger Conservation */}
+        <DebtAccountingChart
+          title="Credit Pool Conservation Across Allocation Steps"
+          subtitle="Verifying that Available + Active + Settling + Quarantined strictly equals pool capacity"
+          provenance="analytical"
+          data={[
+            { step: 1, available: 256, active: 0, settling: 0, quarantined: 0 },
+            { step: 2, available: Math.max(0, 256 - debtPages), active: debtPages, settling: 0, quarantined: 0 },
+            { step: 3, available: Math.max(0, 256 - debtPages), active: debtPages, settling: 0, quarantined: 0 },
+            { step: 4, available: Math.max(0, 256 - debtPages), active: 0, settling: debtPages, quarantined: 0 },
+            { step: 5, available: Math.max(0, 256 - Math.round(debtPages * 0.2)), active: 0, settling: Math.round(debtPages * 0.2), quarantined: 0 },
+            { step: 6, available: 256, active: 0, settling: 0, quarantined: 0 },
+          ]}
+        />
       </div>
     </div>
   );

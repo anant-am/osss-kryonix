@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Sparkles, Terminal, CheckCircle2, AlertTriangle, Radio } from 'lucide-react';
+import { Play, Sparkles, Terminal, CheckCircle2, AlertTriangle, Search, Command } from 'lucide-react';
 import { SystemStatus } from '../api';
 
 interface NavbarProps {
@@ -10,7 +10,7 @@ interface NavbarProps {
   onRunQuickBenchmark: () => void;
   isRunningBenchmark: boolean;
   onOpenPortfolio?: () => void;
-  onOpenHelioTrace?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRunQuickBenchmark,
   isRunningBenchmark,
   onOpenPortfolio,
-  onOpenHelioTrace,
+  onOpenCommandPalette,
 }) => {
   const isHealthy = systemStatus?.status === 'HEALTHY';
   const hasWsl = systemStatus?.environment?.has_wsl ?? true;
@@ -57,15 +57,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>10/10 Invariants</span>
         </div>
 
-        {/* HelioTrace Incident Replay Button */}
-        {onOpenHelioTrace && (
+        {/* Command Palette Button */}
+        {onOpenCommandPalette && (
           <button
-            onClick={onOpenHelioTrace}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-medium border border-cyan-500/30 transition shadow-sm"
-            title="Open HelioTrace Incident Dependency Replay"
+            onClick={onOpenCommandPalette}
+            className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-750 text-slate-300 text-xs font-mono border border-dark-700 transition"
+            title="Open Research Command Palette (Ctrl+K / Cmd+K)"
           >
-            <Radio className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">HelioTrace Replay</span>
+            <Search className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-400">Search</span>
+            <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-dark-900 border border-dark-700 text-slate-400">
+              ⌘K
+            </kbd>
           </button>
         )}
 

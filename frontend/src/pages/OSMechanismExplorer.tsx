@@ -15,6 +15,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { simulateModel, AutomatonSimulation, AutomatonStep } from '../api';
+import { SystemArchitectureDiagram } from '../components/diagrams/SystemArchitectureDiagram';
 
 export const OSMechanismExplorer: React.FC = () => {
   const [stage, setStage] = useState<string>('M0');
@@ -264,6 +265,11 @@ export const OSMechanismExplorer: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Interactive System Boundary & Architecture Explorer */}
+      <div className="pt-4">
+        <SystemArchitectureDiagram />
       </div>
     </div>
   );
