@@ -15,6 +15,7 @@ import { TestCorrectnessLab } from './pages/TestCorrectnessLab';
 import { ResearchEvidence } from './pages/ResearchEvidence';
 import { ReportsExports } from './pages/ReportsExports';
 import { SettingsEnvironment } from './pages/SettingsEnvironment';
+import { PortfolioShowcase } from './pages/PortfolioShowcase';
 
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageId>('overview');
@@ -79,6 +80,10 @@ export const App: React.FC = () => {
       title: 'Research Home: CRISP-L Capped Deferral Workbench',
       subtitle: 'Critical-section-aware memory.high stall deferral in Linux 6.6 cgroups',
     },
+    portfolio: {
+      title: 'Systems Portfolio & Stacking Cards Showcase',
+      subtitle: 'Deck-of-cards sticky scroll architecture, neural flowchart simulation, and latency tail collapse',
+    },
     lab: {
       title: 'Experiment Lab',
       subtitle: 'Live C workload execution, QEMU VM runs, and parameterized stress tests',
@@ -137,10 +142,11 @@ export const App: React.FC = () => {
           onOpenSystemTour={() => setIsSystemTourOpen(true)}
           onRunQuickBenchmark={handleRunQuickBenchmark}
           isRunningBenchmark={isRunningBenchmark}
+          onOpenPortfolio={() => setCurrentPage('portfolio')}
         />
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-6 bg-dark-950/90">
+        <main className={`flex-1 overflow-y-auto ${currentPage === 'portfolio' ? 'p-0' : 'p-6'} bg-dark-950/90`}>
           {currentPage === 'overview' && (
             <ResearchOverview
               status={status}
@@ -148,6 +154,10 @@ export const App: React.FC = () => {
               onRunQuickBench={handleRunQuickBenchmark}
               isRunningBenchmark={isRunningBenchmark}
             />
+          )}
+
+          {currentPage === 'portfolio' && (
+            <PortfolioShowcase onNavigate={(page: PageId) => setCurrentPage(page)} />
           )}
 
           {currentPage === 'lab' && (

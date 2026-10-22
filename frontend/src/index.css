@@ -1,18 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
+  --bg-void: #050505;
+  --accent-gold: #a78b71;
+  --accent-orange: #FF4500;
+  --aurora-crimson: #ff2f3a;
+  --aurora-coral: #ff6b4a;
+  --aurora-amber: #ffb347;
 }
 
 body {
   margin: 0;
-  background-color: #070A0F;
+  background-color: #050505;
   color: #E2E8F0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 /* Custom engineering scrollbars */
@@ -34,18 +51,133 @@ body {
   background: #475569;
 }
 
-/* Monospace metrics styling */
-.font-mono-num {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-variant-numeric: tabular-nums;
+/* Subtle Noise Texture Overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
-/* Subtly animated glow highlights */
-@keyframes subtle-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+/* Living Aurora Light Blade Animations */
+@keyframes aurora-1 {
+  0%, 100% {
+    transform: translate(-10%, -10%) rotate(-15deg) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(5%, 8%) rotate(-8deg) scale(1.15);
+    opacity: 0.65;
+  }
 }
 
-.animate-subtle-pulse {
-  animation: subtle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes aurora-2 {
+  0%, 100% {
+    transform: translate(15%, 5%) rotate(25deg) scale(1.1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-5%, -12%) rotate(18deg) scale(0.95);
+    opacity: 0.6;
+  }
+}
+
+@keyframes aurora-3 {
+  0%, 100% {
+    transform: translate(-5%, 20%) rotate(-5deg) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate(10%, 10%) rotate(5deg) scale(1.2);
+    opacity: 0.55;
+  }
+}
+
+.animate-aurora-1 {
+  animation: aurora-1 18s ease-in-out infinite;
+}
+
+.animate-aurora-2 {
+  animation: aurora-2 22s ease-in-out infinite;
+}
+
+.animate-aurora-3 {
+  animation: aurora-3 26s ease-in-out infinite;
+}
+
+/* Tactile Keycap Button Layered Shadow */
+.keycap-raised {
+  background: #e6e6e6;
+  color: #1a1a1a;
+  border-radius: 8px;
+  box-shadow: 
+    0 0 0 2px #000000,
+    0 4px 14px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.keycap-raised:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 0 0 2px #000000,
+    0 6px 18px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.keycap-raised:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 0 0 2px #000000,
+    0 2px 6px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Neural connection flow SVG dash animation */
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.animate-flow-dash {
+  stroke-dasharray: 6 10;
+  animation: flow-dash 1.2s linear infinite;
+}
+
+/* Glow breathing pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(18, 18, 20, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-gold {
+  background: rgba(22, 19, 16, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(167, 139, 113, 0.25);
+  box-shadow: 0 0 40px rgba(167, 139, 113, 0.08);
 }

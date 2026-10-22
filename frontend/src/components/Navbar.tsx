@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenSystemTour: () => void;
   onRunQuickBenchmark: () => void;
   isRunningBenchmark: boolean;
+  onOpenPortfolio?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSystemTour,
   onRunQuickBenchmark,
   isRunningBenchmark,
+  onOpenPortfolio,
 }) => {
   const isHealthy = systemStatus?.status === 'HEALTHY';
   const hasWsl = systemStatus?.environment?.has_wsl ?? true;
@@ -52,6 +54,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>10/10 Invariants</span>
         </div>
+
+        {/* Portfolio Deck Button */}
+        {onOpenPortfolio && (
+          <button
+            onClick={onOpenPortfolio}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-medium border border-amber-500/30 transition shadow-sm"
+            title="Open Stacking Cards Portfolio Showcase"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Portfolio Deck</span>
+          </button>
+        )}
 
         {/* Quick Benchmark Button */}
         <button

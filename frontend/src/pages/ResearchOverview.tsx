@@ -154,6 +154,13 @@ export const ResearchOverview: React.FC<ResearchOverviewProps> = ({
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <button
+              onClick={() => onNavigate('portfolio')}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10 transition active:scale-95"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Stacking Portfolio</span>
+            </button>
+            <button
               onClick={() => onNavigate('before-after')}
               className="px-4 py-2.5 rounded-xl bg-crisp-cyan hover:bg-crisp-cyan/90 text-dark-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-crisp-cyan/25 transition active:scale-95"
             >
