@@ -1,0 +1,49 @@
+{
+  "run_id": "run_2e755d9119",
+  "name": "Test M0",
+  "timestamp": "2026-10-22T06:50:20Z",
+  "category": "stock_linux_measured",
+  "scenario_id": "W2",
+  "scenario_name": "Controlled Memory Pressure",
+  "policy": "M0",
+  "threads": 4,
+  "duration_sec": 1,
+  "cs_duration_us": 50,
+  "alloc_pages": 16,
+  "alloc_prob_pct": 25,
+  "memory_high_mb": 100,
+  "memory_max_mb": 250,
+  "environment": {
+    "host_os": "Windows",
+    "kernel_version": "6.18.33.2-microsoft-standard-WSL2",
+    "has_wsl": true,
+    "cgroup2_available": true,
+    "runner_mode": "wsl2_linux"
+  },
+  "metrics": {
+    "policy": 4,
+    "threads": 4,
+    "duration_sec": 1,
+    "throughput_ops_sec": 1114.39,
+    "total_operations": 1128,
+    "total_allocations": 315,
+    "lock_wait_p50_ms": 0.0,
+    "lock_wait_p95_ms": 0.036,
+    "lock_wait_p99_ms": 0.115,
+    "lock_wait_p999_ms": 0.558,
+    "throttle_events_in_cs": 0,
+    "throttle_events_outside_cs": 315,
+    "sample_count": 1128
+  },
+  "queueing_prediction": {
+    "baseline_mean_wait_ms": 999000.0,
+    "crisp_mean_wait_ms": 0.003,
+    "wait_reduction_ratio": 100.0,
+    "dominant_variance_term": 500.0
+  },
+  "overshoot_bound": {
+    "max_extra_pages": 128,
+    "max_extra_kb": 512,
+    "enforced_by": "M0 per-thread cap"
+  }
+}

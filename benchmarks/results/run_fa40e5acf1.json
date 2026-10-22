@@ -1,0 +1,49 @@
+{
+  "run_id": "run_fa40e5acf1",
+  "name": "B0 on Controlled Memory Pressure (4T)",
+  "timestamp": "2026-10-22T00:08:56Z",
+  "category": "simulated",
+  "scenario_id": "W2",
+  "scenario_name": "Controlled Memory Pressure",
+  "policy": "B0",
+  "threads": 4,
+  "duration_sec": 1,
+  "cs_duration_us": 50,
+  "alloc_pages": 16,
+  "alloc_prob_pct": 25,
+  "memory_high_mb": 100,
+  "memory_max_mb": 250,
+  "environment": {
+    "host_os": "Windows",
+    "kernel_version": "11",
+    "has_wsl": false,
+    "cgroup2_available": false,
+    "runner_mode": "portable_model"
+  },
+  "metrics": {
+    "policy": "B0",
+    "threads": 4,
+    "duration_sec": 1,
+    "throughput_ops_sec": 131.25,
+    "total_operations": 131,
+    "total_allocations": 32,
+    "lock_wait_p50_ms": 0.28,
+    "lock_wait_p95_ms": 52.4,
+    "lock_wait_p99_ms": 78.6,
+    "lock_wait_p999_ms": 104.2,
+    "throttle_events_in_cs": 26,
+    "throttle_events_outside_cs": 0,
+    "sample_count": 131
+  },
+  "queueing_prediction": {
+    "baseline_mean_wait_ms": Infinity,
+    "crisp_mean_wait_ms": 0.0,
+    "wait_reduction_ratio": 100.0,
+    "dominant_variance_term": 500.0
+  },
+  "overshoot_bound": {
+    "max_extra_pages": 128,
+    "max_extra_kb": 512,
+    "enforced_by": "M1 credit pool"
+  }
+}

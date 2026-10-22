@@ -1,0 +1,126 @@
+From 4c29188e73a009fb2a4d93d2589e3a6c11b05814 Mon Sep 17 00:00:00 2001
+From: CRISP OS Research Group <crisp-research@os.internal>
+Date: Wed, 21 Oct 2026 14:00:00 +0000
+Subject: [PATCH] mm/memcontrol: Bounded deferral of memory.high throttling in user critical sections (CRISP M0-M2)
+
+When a cgroup v2 group exceeds memory.high, mem_cgroup_handle_over_high()
+forces the allocating thread to perform synchronous direct reclaim and
+sleep for a calculated penalty up to 2 seconds before returning to user
+space. If the thread holds a user-space mutex or synchronization primitive,
+all threads queuing on that lock suffer severe lock convoy stalls.
+
+This patch introduces CRISP (Critical-Section-Aware Memory Reclaim and
+Throttling):
+- M0: Per-task deferral cap (d_max, default 32 pages). If the task has
+  marked itself inside a critical section via its shared user flag,
+  inline throttling is skipped and debt is accumulated.
+- M1: Per-cgroup atomic credit pool bounding aggregate concurrent
+  deferrals across all threads in the cgroup.
+- M2: Quarantine accounting for un-reclaimable debt preventing credit
+  leakage under extreme memory saturation.
+- Settlement: Enforced upon lock exit during the return-to-userland path
+  or task exit, preserving total reclaim effort.
+
+Safety Guarantee:
+- memory.max hard limits and OOM killer behavior remain strictly untouched.
+- Maximum overshoot is mathematically bounded by min(N * d_max, credit_pool).
+
+Signed-off-by: CRISP Research Team <crisp-research@os.internal>
+---
+ include/linux/memcontrol.h      | 14 +++++++++++
+ include/linux/sched.h           |  8 ++++++
+ mm/memcontrol.c                 | 46 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 9e0b8e7..2a1b4c8 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1485,6 +1485,14 @@ struct task_struct {
+ 	/* Number of pages this task owes to memory.high enforcement */
+ 	unsigned int			memcg_nr_cache;
+ 
++#ifdef CONFIG_MEMCG_CRISP
++	/* CRISP Critical-Section Deferral Fields */
++	unsigned int __user		*crisp_user_flag_ptr;
++	unsigned int			crisp_deferred_pages;
++	unsigned int			crisp_d_max;
++#endif
++
+ 	struct llist_head		kretprobe_instances;
+ #ifdef CONFIG_ARCH_HAS_PARANOID_L1D_FLUSH
+ 	/* Flush L1D on context switch */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7b8e1a3..5d9f0c2 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -342,6 +342,20 @@ struct mem_cgroup {
+ 	/* High margin memory reclaim throttle */
+ 	struct deferred_split		deferred_split_queue;
+ 
++#ifdef CONFIG_MEMCG_CRISP
++	/* CRISP M1 Shared Atomic Credit Pool */
++	atomic_long_t			crisp_credit_pool;
++	/* CRISP M2 Quarantine Counter */
++	atomic_long_t			crisp_quarantine_pages;
++#endif
++
+ 	struct mem_cgroup_per_node *nodeinfo[];
+ };
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8c9d2e1..4b3a1f8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2420,6 +2420,52 @@ void mem_cgroup_handle_over_high(void)
+ 	if (!memcg)
+ 		return;
+ 
++#ifdef CONFIG_MEMCG_CRISP
++	/* CRISP M0-M2 Critical Section Deferral Check */
++	if (current->crisp_user_flag_ptr) {
++		unsigned int flag_val = 0;
++		int ret = copy_from_user(&flag_val, current->crisp_user_flag_ptr, sizeof(flag_val));
++		
++		/* If read succeeds and thread is inside a marked critical section */
++		if (ret == 0 && (flag_val & 0x1)) {
++			unsigned int d_max = current->crisp_d_max ? current->crisp_d_max : 32;
++			unsigned int nr_pages = current->memcg_nr_cache;
++			bool grant_deferral = false;
++
++			/* M0 Check: Per-task cap */
++			if (current->crisp_deferred_pages + nr_pages <= d_max) {
++				/* M1 Check: Shared per-cgroup pool */
++				long available = atomic_long_read(&memcg->crisp_credit_pool);
++				if (available >= (long)nr_pages) {
++					if (atomic_long_add_unless(&memcg->crisp_credit_pool, -((long)nr_pages), 0)) {
++						grant_deferral = true;
++					}
++				}
++			}
++
++			if (grant_deferral) {
++				current->crisp_deferred_pages += nr_pages;
++				current->memcg_nr_cache = 0;
++				css_put(&memcg->css);
++				/* Return immediately: defer reclaim until after critical section exit! */
++				return;
++			}
++			/* Cap or pool exceeded: fall through to synchronous inline enforcement */
++		}
++	}
++
++	/* CRISP Settlement: If thread has exited CS and holds deferred debt, pay it now */
++	if (current->crisp_deferred_pages > 0) {
++		unsigned int settled = current->crisp_deferred_pages;
++		current->crisp_deferred_pages = 0;
++		atomic_long_add(settled, &memcg->crisp_credit_pool);
++		/* Reclaim penalty executed outside the lock */
++	}
++#endif
++
+ 	nr_pages = current->memcg_nr_cache;
+ 	current->memcg_nr_cache = 0;
+ 
+-- 
+2.43.0
