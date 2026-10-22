@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Sparkles, Terminal, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Play, Sparkles, Terminal, CheckCircle2, AlertTriangle, Radio } from 'lucide-react';
 import { SystemStatus } from '../api';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
   onRunQuickBenchmark: () => void;
   isRunningBenchmark: boolean;
   onOpenPortfolio?: () => void;
+  onOpenHelioTrace?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRunQuickBenchmark,
   isRunningBenchmark,
   onOpenPortfolio,
+  onOpenHelioTrace,
 }) => {
   const isHealthy = systemStatus?.status === 'HEALTHY';
   const hasWsl = systemStatus?.environment?.has_wsl ?? true;
@@ -54,6 +56,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>10/10 Invariants</span>
         </div>
+
+        {/* HelioTrace Incident Replay Button */}
+        {onOpenHelioTrace && (
+          <button
+            onClick={onOpenHelioTrace}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-medium border border-cyan-500/30 transition shadow-sm"
+            title="Open HelioTrace Incident Dependency Replay"
+          >
+            <Radio className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">HelioTrace Replay</span>
+          </button>
+        )}
 
         {/* Portfolio Deck Button */}
         {onOpenPortfolio && (

@@ -13,11 +13,13 @@ import {
   FileText,
   Settings,
   Sparkles,
+  Radio,
 } from 'lucide-react';
 
 export type PageId =
   | 'overview'
   | 'portfolio'
+  | 'heliotrace'
   | 'lab'
   | 'before-after'
   | 'mechanism'
@@ -35,8 +37,9 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) => {
   const navItems: { id: PageId; label: string; icon: React.ReactNode; badge?: string }[] = [
-    { id: 'overview', label: 'Research Home', icon: <Activity className="w-4 h-4" />, badge: 'Core' },
+    { id: 'overview', label: 'Research Home', icon: <Activity className="w-4 h-4" />, badge: 'Flowcharts' },
     { id: 'portfolio', label: 'Systems Portfolio', icon: <Sparkles className="w-4 h-4 text-amber-400" />, badge: 'Cards' },
+    { id: 'heliotrace', label: 'HelioTrace Replay', icon: <Radio className="w-4 h-4 text-cyan-400" />, badge: 'Incident' },
     { id: 'lab', label: 'Experiment Lab', icon: <Sliders className="w-4 h-4" />, badge: 'Live' },
     { id: 'before-after', label: 'Results Comparison', icon: <Scale className="w-4 h-4" />, badge: 'Eval' },
     { id: 'mechanism', label: 'Mechanism Explorer', icon: <GitBranch className="w-4 h-4" />, badge: 'CRISP-L' },
@@ -75,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) =
         <div className="px-3 pb-1 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
           Research Workbench
         </div>
-        {navItems.slice(0, 4).map((item) => (
+        {navItems.slice(0, 5).map((item) => (
           <NavItemButton
             key={item.id}
             item={item}
@@ -87,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) =
         <div className="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
           Kernel & Model Analysis
         </div>
-        {navItems.slice(4, 7).map((item) => (
+        {navItems.slice(5, 8).map((item) => (
           <NavItemButton
             key={item.id}
             item={item}
@@ -99,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) =
         <div className="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
           Verification & Scientific Integrity
         </div>
-        {navItems.slice(7, 9).map((item) => (
+        {navItems.slice(8, 10).map((item) => (
           <NavItemButton
             key={item.id}
             item={item}
@@ -111,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onSelectPage }) =
         <div className="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
           Execution & Artifacts
         </div>
-        {navItems.slice(9).map((item) => (
+        {navItems.slice(10).map((item) => (
           <NavItemButton
             key={item.id}
             item={item}

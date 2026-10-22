@@ -16,12 +16,30 @@ import { ResearchEvidence } from './pages/ResearchEvidence';
 import { ReportsExports } from './pages/ReportsExports';
 import { SettingsEnvironment } from './pages/SettingsEnvironment';
 import { PortfolioShowcase } from './pages/PortfolioShowcase';
+import { HelioTrace } from './pages/HelioTrace';
+
+// Interactive Components
+import { TubesBackground } from './components/TubesBackground';
+import { MagnificationDock, DockItemData } from './components/MagnificationDock';
+import {
+  Activity,
+  Sparkles,
+  Radio,
+  Sliders,
+  Scale,
+  GitBranch,
+  CheckCircle2,
+  Play,
+  Flame,
+  Settings,
+} from 'lucide-react';
 
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageId>('overview');
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [isSystemTourOpen, setIsSystemTourOpen] = useState<boolean>(false);
   const [isRunningBenchmark, setIsRunningBenchmark] = useState<boolean>(false);
+  const [isTubesActive, setIsTubesActive] = useState<boolean>(false);
   const [comparisonPair, setComparisonPair] = useState<{ baselineId?: string; crispId?: string }>({});
 
   const loadStatus = async () => {
@@ -84,6 +102,10 @@ export const App: React.FC = () => {
       title: 'Systems Portfolio & Stacking Cards Showcase',
       subtitle: 'Deck-of-cards sticky scroll architecture, neural flowchart simulation, and latency tail collapse',
     },
+    heliotrace: {
+      title: 'HelioTrace: Deterministic Incident Dependency Replay',
+      subtitle: 'Checkout latency spike investigation · Causal path topology & deploy v42.8 isolation',
+    },
     lab: {
       title: 'Experiment Lab',
       subtitle: 'Live C workload execution, QEMU VM runs, and parameterized stress tests',
@@ -127,13 +149,72 @@ export const App: React.FC = () => {
     subtitle: 'Operating Systems Research Laboratory',
   };
 
+  const dockItems: DockItemData[] = [
+    {
+      icon: <Activity className="w-5 h-5 text-crisp-cyan" />,
+      label: 'Home & Flowcharts',
+      onClick: () => setCurrentPage('overview'),
+    },
+    {
+      icon: <Sparkles className="w-5 h-5 text-amber-400" />,
+      label: 'Stacking Cards Deck',
+      badge: 'Cards',
+      onClick: () => setCurrentPage('portfolio'),
+    },
+    {
+      icon: <Radio className="w-5 h-5 text-cyan-400" />,
+      label: 'HelioTrace Replay',
+      badge: 'Incident',
+      onClick: () => setCurrentPage('heliotrace'),
+    },
+    {
+      icon: <Sliders className="w-5 h-5 text-emerald-400" />,
+      label: 'Experiment Lab',
+      onClick: () => setCurrentPage('lab'),
+    },
+    {
+      icon: <Scale className="w-5 h-5 text-blue-400" />,
+      label: 'Results Comparison',
+      onClick: () => setCurrentPage('before-after'),
+    },
+    {
+      icon: <GitBranch className="w-5 h-5 text-purple-400" />,
+      label: 'Mechanism Explorer',
+      onClick: () => setCurrentPage('mechanism'),
+    },
+    {
+      icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />,
+      label: 'Safety Contract',
+      onClick: () => setCurrentPage('tests'),
+    },
+    {
+      icon: <Flame className={`w-5 h-5 ${isTubesActive ? 'text-rose-400 animate-pulse' : 'text-slate-400'}`} />,
+      label: isTubesActive ? 'Disable 3D Tubes' : 'Enable 3D Tubes',
+      badge: isTubesActive ? 'ON' : '3D',
+      onClick: () => setIsTubesActive(!isTubesActive),
+    },
+    {
+      icon: <Play className={`w-5 h-5 text-amber-400 ${isRunningBenchmark ? 'animate-spin' : ''}`} />,
+      label: isRunningBenchmark ? 'Benchmarking...' : 'Run Workload',
+      onClick: handleRunQuickBenchmark,
+    },
+  ];
+
   return (
-    <div className="flex h-screen bg-dark-950 text-slate-100 font-sans overflow-hidden antialiased">
+    <div className="flex h-screen bg-dark-950 text-slate-100 font-sans overflow-hidden antialiased relative">
+      {/* 3D Tubes Interactive Background Overlay */}
+      {isTubesActive && (
+        <TubesBackground
+          isActive={isTubesActive}
+          className="fixed inset-0 pointer-events-none z-0"
+        />
+      )}
+
       {/* 10-Page Sidebar Navigation */}
       <Sidebar currentPage={currentPage} onSelectPage={setCurrentPage} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Top Header Bar */}
         <Navbar
           pageTitle={currentHeader.title}
@@ -143,10 +224,11 @@ export const App: React.FC = () => {
           onRunQuickBenchmark={handleRunQuickBenchmark}
           isRunningBenchmark={isRunningBenchmark}
           onOpenPortfolio={() => setCurrentPage('portfolio')}
+          onOpenHelioTrace={() => setCurrentPage('heliotrace')}
         />
 
         {/* Scrollable Page Body */}
-        <main className={`flex-1 overflow-y-auto ${currentPage === 'portfolio' ? 'p-0' : 'p-6'} bg-dark-950/90`}>
+        <main className={`flex-1 overflow-y-auto ${currentPage === 'portfolio' || currentPage === 'heliotrace' ? 'p-0' : 'p-6'} bg-dark-950/90 pb-20`}>
           {currentPage === 'overview' && (
             <ResearchOverview
               status={status}
@@ -158,6 +240,10 @@ export const App: React.FC = () => {
 
           {currentPage === 'portfolio' && (
             <PortfolioShowcase onNavigate={(page: PageId) => setCurrentPage(page)} />
+          )}
+
+          {currentPage === 'heliotrace' && (
+            <HelioTrace onBackToOverview={() => setCurrentPage('overview')} />
           )}
 
           {currentPage === 'lab' && (
@@ -179,6 +265,11 @@ export const App: React.FC = () => {
           {currentPage === 'reports' && <ReportsExports />}
           {currentPage === 'settings' && <SettingsEnvironment />}
         </main>
+      </div>
+
+      {/* Magnification Dock Floating at Bottom Center Throughout the Application */}
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <MagnificationDock items={dockItems} />
       </div>
 
       {/* Executive System Tour Walkthrough Modal */}

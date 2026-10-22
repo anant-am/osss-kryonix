@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HelioTrace · Incident Dependency Replay</title>
+  <style>
+    :root {
+      --bg: #03090d;
+      --cyan: #43ced4;
+      --ice: #e4f3f2;
+      --orange: #f27343;
+      --lavender: #6d4a87;
+      --gray: #677177;
+      --panel: #050e14;
+      --panel-inner: #08131a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ice);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid rgba(103, 113, 119, 0.25);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .scenario-sub {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    .telemetry-rail {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .chip {
+      background: var(--panel-inner);
+      border: 1px solid rgba(103, 113, 119, 0.3);
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--ice);
+    }
+
+    .chip-orange {
+      border-color: rgba(242, 115, 67, 0.5);
+      color: var(--orange);
+      background: rgba(242, 115, 67, 0.1);
+    }
+
+    .chip-cyan {
+      border-color: rgba(67, 206, 212, 0.5);
+      color: var(--cyan);
+      background: rgba(67, 206, 212, 0.1);
+    }
+
+    /* Grid Layout */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      min-height: 480px;
+    }
+
+    @media (max-width: 700px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column-reverse;
+      }
+    }
+
+    .canvas-container {
+      background: var(--panel);
+      border: 1px solid rgba(103, 113, 119, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--gray);
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(103, 113, 119, 0.2);
+      padding-bottom: 6px;
+    }
+
+    canvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      display: block;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+
+    .phase-banner {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: var(--panel-inner);
+      border: 1px solid rgba(103, 113, 119, 0.2);
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Side Rail */
+    .side-rail {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(103, 113, 119, 0.3);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 12px;
+    }
+
+    .suspect-card {
+      border-color: rgba(242, 115, 67, 0.6);
+      background: rgba(5, 14, 20, 0.95);
+    }
+
+    .event-log {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-item {
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--panel-inner);
+      border: 1px solid rgba(103, 113, 119, 0.2);
+      font-size: 11px;
+      opacity: 0.4;
+      transition: opacity 0.3s;
+    }
+
+    .log-item.active {
+      opacity: 1;
+      border-color: rgba(67, 206, 212, 0.4);
+    }
+
+    /* Footer Controls */
+    footer {
+      margin-top: 16px;
+      background: var(--panel);
+      border: 1px solid rgba(103, 113, 119, 0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+      outline: none;
+    }
+
+    .btn-replay {
+      background: var(--cyan);
+      color: var(--bg);
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-replay:hover {
+      opacity: 0.9;
+    }
+
+    .btn-step {
+      background: var(--panel-inner);
+      color: var(--ice);
+      border: 1px solid rgba(103, 113, 119, 0.4);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    .scrubber {
+      flex: 1;
+      max-width: 380px;
+      accent-color: var(--cyan);
+    }
+
+    .source-link {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .source-link:hover {
+      color: var(--cyan);
+    }
+  </style>
+</head>
+<body data-preview-ready="false">
+
+  <!-- Quiet Status Header -->
+  <header>
+    <div>
+      <div class="brand-title">HelioTrace · Incident Dependency Replay</div>
+      <div class="scenario-sub mono">Checkout latency spike with Suspect deploy v42.8</div>
+    </div>
+
+    <!-- Visibly Labeled Simulated Telemetry -->
+    <div class="telemetry-rail mono">
+      <div class="chip">08:42:13 (Simulated)</div>
+      <div class="chip">18.6k simulated checkouts</div>
+      <div class="chip chip-cyan">87% scenario confidence</div>
+      <div class="chip chip-orange">7% simulated blast radius</div>
+      <div class="chip" style="border-color: var(--lavender);">Page 2 owners</div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Canvas & Rail -->
+  <main class="workspace">
+    <!-- Dependency Canvas -->
+    <div class="canvas-container">
+      <div class="canvas-header mono">
+        <span>Topology Canvas (web edge · orders-api · inventory · cart-cache · billing-worker)</span>
+        <span id="time-display">0.00s / 5.00s</span>
+      </div>
+      <canvas id="topoCanvas"></canvas>
+      <div class="phase-banner mono">
+        <span id="phase-text">Phase 1: Ambient traffic converging from web edge into orders-api (0.0s – 1.2s)</span>
+        <span style="color: var(--gray);">Deterministic Seed: 0x8f2a1</span>
+      </div>
+    </div>
+
+    <!-- Side Rail -->
+    <aside class="side-rail">
+      <div class="card suspect-card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span class="mono" style="color: var(--orange); font-weight: bold; font-size: 10px;">SUSPECT DEPLOY IDENTIFIED</span>
+          <span class="mono chip chip-orange" style="padding: 2px 6px;">v42.8</span>
+        </div>
+        <p style="color: rgba(228, 243, 242, 0.9); line-height: 1.4; margin-bottom: 8px;">
+          Deploy <strong style="color: var(--orange);">v42.8</strong> in <strong>orders-api</strong> introduced memory.high throttle during critical sections, causing lock convoy cascades to <strong>billing-worker</strong>.
+        </p>
+        <div class="mono" style="font-size: 10px; color: var(--gray);">Causal Path: orders-api &rarr; billing-worker</div>
+      </div>
+
+      <!-- Accessible Event Log -->
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="mono" style="font-weight: bold; margin-bottom: 8px; font-size: 11px;">Scenario Event Log (Simulated)</div>
+        <div class="event-log mono" id="eventLog">
+          <div class="log-item active" id="log-0">0.00s · Ambient request ingress established</div>
+          <div class="log-item" id="log-1">1.20s · Upstream paths to inventory & cart-cache healthy</div>
+          <div class="log-item" id="log-2">2.50s · Deploy v42.8 ignites with causal stall pulse</div>
+          <div class="log-item" id="log-3">3.10s · cgroup memory.high throttle triggers on lock holder</div>
+          <div class="log-item" id="log-4">3.70s · billing-worker thread pool stalled (p99 4,820ms)</div>
+          <div class="log-item" id="log-5">4.80s · Scenario impact settled (87% confidence)</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Replay Footer -->
+  <footer>
+    <div class="controls-group">
+      <button id="btnReplay" class="btn-replay" data-preview-action="replay-toggle">Replay active incident</button>
+      <button id="btnBack" class="btn-step mono">&larr; -0.5s</button>
+      <button id="btnForward" class="btn-step mono">+0.5s &rarr;</button>
+      <button id="btnReset" class="btn-step mono">&#8634; Reset</button>
+    </div>
+
+    <input type="range" id="scrubber" class="scrubber" min="0" max="5000" step="50" value="0">
+
+    <div>
+      <a href="https://github.com/anant-am/osss-kryonix" target="_blank" class="source-link mono">Source: HelioTrace Incident Engine v1.0</a>
+    </div>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('topoCanvas');
+    const ctx = canvas.getContext('2d');
+    const btnReplay = document.getElementById('btnReplay');
+    const btnBack = document.getElementById('btnBack');
+    const btnForward = document.getElementById('btnForward');
+    const btnReset = document.getElementById('btnReset');
+    const scrubber = document.getElementById('scrubber');
+    const timeDisplay = document.getElementById('time-display');
+    const phaseText = document.getElementById('phase-text');
+
+    let replayTime = 0;
+    let isPlaying = true;
+    let lastTs = null;
+
+    const nodes = [
+      { id: 'web-edge', label: 'web edge', x: 0.14, y: 0.50, p99: '18ms' },
+      { id: 'orders-api', label: 'orders-api', x: 0.38, y: 0.50, p99: '42ms' },
+      { id: 'inventory', label: 'inventory', x: 0.62, y: 0.26, p99: '12ms' },
+      { id: 'cart-cache', label: 'cart-cache', x: 0.62, y: 0.74, p99: '4ms' },
+      { id: 'billing-worker', label: 'billing-worker', x: 0.86, y: 0.50, p99: '65ms' }
+    ];
+
+    function resize() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight - 40;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function render() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.fillStyle = '#03090d';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(103, 113, 119, 0.08)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 32) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 32) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const getPos = n => ({ x: n.x * w, y: n.y * h });
+      const web = getPos(nodes[0]);
+      const orders = getPos(nodes[1]);
+      const inv = getPos(nodes[2]);
+      const cart = getPos(nodes[3]);
+      const bill = getPos(nodes[4]);
+
+      // Paths
+      function drawPath(from, to, isCausal) {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        if (isCausal && replayTime >= 2500) {
+          ctx.strokeStyle = '#f27343';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([8, 6]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // pulse
+          const prog = Math.min(1, (replayTime - 2500) / 1200);
+          const px = from.x + (to.x - from.x) * prog;
+          const py = from.y + (to.y - from.y) * prog;
+          ctx.fillStyle = '#f27343';
+          ctx.beginPath();
+          ctx.arc(px, py, 6, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = (replayTime >= 100) ? '#43ced4' : 'rgba(103, 113, 119, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      drawPath(web, orders, false);
+      drawPath(orders, inv, false);
+      drawPath(orders, cart, false);
+      drawPath(orders, bill, true);
+
+      // Deploy marker
+      if (replayTime >= 2500) {
+        const mx = (orders.x + bill.x) / 2;
+        const my = (orders.y + bill.y) / 2 - 20;
+        ctx.fillStyle = '#f27343';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('DEPLOY v42.8 (SUSPECT)', mx, my);
+      }
+
+      // Nodes
+      nodes.forEach(n => {
+        const p = getPos(n);
+        const isSuspect = (n.id === 'orders-api' && replayTime >= 2500);
+        const isImpacted = (n.id === 'billing-worker' && replayTime >= 3700);
+        const isHealthy = (replayTime >= 100);
+
+        ctx.fillStyle = '#08131a';
+        ctx.strokeStyle = isImpacted ? '#f27343' : isSuspect ? '#6d4a87' : isHealthy ? '#43ced4' : '#677177';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(p.x - 14, p.y - 14, 28, 28);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#e4f3f2';
+        ctx.font = '600 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.label, p.x, p.y + 30);
+
+        ctx.fillStyle = isImpacted ? '#f27343' : isHealthy ? '#43ced4' : '#677177';
+        ctx.font = '500 10px monospace';
+        const p99Val = (isImpacted) ? '4,820ms' : (isSuspect) ? '1,840ms' : n.p99;
+        ctx.fillText(p99Val, p.x, p.y + 42);
+      });
+
+      // Update text
+      timeDisplay.textContent = (replayTime / 1000).toFixed(2) + 's / 5.00s';
+      scrubber.value = replayTime;
+
+      if (replayTime < 1200) {
+        phaseText.textContent = 'Phase 1: Ambient traffic converging from web edge into orders-api (0.0s – 1.2s)';
+      } else if (replayTime < 2500) {
+        phaseText.textContent = 'Phase 2: Upstream paths to inventory & cart-cache healthy (1.2s – 2.5s)';
+      } else if (replayTime < 3700) {
+        phaseText.textContent = 'Phase 3: Deploy v42.8 ignites with causal stall pulse (2.5s – 3.7s)';
+      } else {
+        phaseText.textContent = 'Phase 4: billing-worker saturated under lock stall; scenario impact settled (3.7s – 5.0s)';
+      }
+
+      // Event log highlights
+      const steps = [0, 1200, 2500, 3100, 3700, 4800];
+      steps.forEach((s, i) => {
+        const el = document.getElementById('log-' + i);
+        if (el) {
+          if (replayTime >= s) el.classList.add('active');
+          else el.classList.remove('active');
+        }
+      });
+
+      if (replayTime >= 5000) {
+        document.body.setAttribute('data-preview-ready', 'true');
+        btnReplay.textContent = 'Replay active incident';
+      } else {
+        document.body.setAttribute('data-preview-ready', 'false');
+        btnReplay.textContent = isPlaying ? 'Pause' : 'Replay active incident';
+      }
+    }
+
+    function loop(ts) {
+      if (!lastTs) lastTs = ts;
+      const delta = ts - lastTs;
+      lastTs = ts;
+
+      if (isPlaying) {
+        replayTime += delta;
+        if (replayTime >= 5000) {
+          replayTime = 5000;
+          isPlaying = false;
+        }
+      }
+      render();
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    btnReplay.addEventListener('click', () => {
+      if (replayTime >= 5000) {
+        replayTime = 0;
+        isPlaying = true;
+      } else {
+        isPlaying = !isPlaying;
+      }
+      lastTs = null;
+    });
+
+    btnReset.addEventListener('click', () => {
+      replayTime = 0;
+      isPlaying = true;
+      lastTs = null;
+    });
+
+    btnBack.addEventListener('click', () => {
+      isPlaying = false;
+      replayTime = Math.max(0, replayTime - 500);
+    });
+
+    btnForward.addEventListener('click', () => {
+      isPlaying = false;
+      replayTime = Math.min(5000, replayTime + 500);
+    });
+
+    scrubber.addEventListener('input', e => {
+      isPlaying = false;
+      replayTime = Number(e.target.value);
+    });
+  </script>
+</body>
+</html>
